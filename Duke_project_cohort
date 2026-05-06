@@ -1,0 +1,35 @@
+USE [WHIO_Metadata]
+GO
+/****** Object:  StoredProcedure [MPri].[PROC_CREATE_TABLE_Duke_project]    Script Date: 5/6/2026 10:14:05 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [MPri].[PROC_CREATE_TABLE_Duke_project] 
+AS
+BEGIN
+
+	IF EXISTS (
+		 SELECT * 
+		 FROM SYS.OBJECTS 
+		 WHERE 1=1
+			 AND OBJECT_ID = OBJECT_ID(N'[MPri].[xFact_Duke_project_cohort]')
+			 AND TYPE IN (N'U'))
+	DROP TABLE [MPri].[xFact_Duke_project_cohort];
+
+SELECT MC.Whio_MemberId, MC.ServiceDate
+INTO MPri.xFact_Duke_project_cohort
+FROM WHIO_SID.dbo.xFact_IntMedClaim MC
+CROSS APPLY (
+    VALUES 
+        (MC.IcdAdmissionDiagnosisCode),(MC.IcdDiagnosisCode1),(MC.IcdDiagnosisCode2),(MC.IcdDiagnosisCode3),(MC.IcdDiagnosisCode4),
+        (MC.IcdDiagnosisCode5),(MC.IcdDiagnosisCode6),(MC.IcdDiagnosisCode7),(MC.IcdDiagnosisCode8),(MC.IcdDiagnosisCode9),
+		(MC.IcdDiagnosisCode10)
+) AS x(icd)
+WHERE x.icd LIKE 'C16%' OR x.icd LIKE 'C22%' OR x.icd LIKE 'C43%'  OR x.icd IN ('C451', 'C786');
+		
+
+
+
+END
