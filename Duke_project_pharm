@@ -1,0 +1,29 @@
+USE [WHIO_Metadata]
+GO
+/****** Object:  StoredProcedure [MPri].[PROC_CREATE_TABLE_Duke_Cancer_pharm]    Script Date: 5/6/2026 10:15:18 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [MPri].[PROC_CREATE_TABLE_Duke_Cancer_pharm] 
+AS
+BEGIN
+
+	IF EXISTS (
+		 SELECT * 
+		 FROM SYS.OBJECTS 
+		 WHERE 1=1
+			 AND OBJECT_ID = OBJECT_ID(N'[MPri].[xFact_Duke_project_pharm]')
+			 AND TYPE IN (N'U'))
+	DROP TABLE [MPri].xFact_Duke_project_pharm;
+WITH UniqueIDs AS (
+    SELECT DISTINCT Whio_MemberId FROM MPri.xFact_Duke_project_cohort
+)
+SELECT PC.Whio_MemberId, PC.PrescriptionDate,PC.NationalDrugCode, PC.DeniedFlag, PC.PrescribingProviderNpi, PC.PrescribingProviderTaxId,PC.PharmacyNpi
+INTO MPri.xFact_Duke_project_pharm
+FROM UniqueIDs u
+LEFT JOIN [WHIO_SID].[dbo].[xFact_IntPharmClaim] PC
+		ON u.Whio_MemberId=PC.Whio_MemberId
+
+END
