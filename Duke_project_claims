@@ -1,0 +1,33 @@
+USE [WHIO_Metadata]
+GO
+/****** Object:  StoredProcedure [MPri].[PROC_CREATE_TABLE_Duke_Cancer_claims]    Script Date: 5/6/2026 10:11:46 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [MPri].[PROC_CREATE_TABLE_Duke_Cancer_claims] 
+AS
+BEGIN
+
+	IF EXISTS (
+		 SELECT * 
+		 FROM SYS.OBJECTS 
+		 WHERE 1=1
+			 AND OBJECT_ID = OBJECT_ID(N'[MPri].[xFact_Duke_project_claims]')
+			 AND TYPE IN (N'U'))
+	DROP TABLE [MPri].[xFact_Duke_project_claims];
+WITH UniqueIDs AS (
+    SELECT DISTINCT Whio_MemberId FROM MPri.xFact_Duke_project_cohort
+)
+SELECT MC.Whio_MemberId, MC.ServiceDate, MC.IcdAdmissionDiagnosisCode, MC.IcdDiagnosisCode1,MC.IcdDiagnosisCode2,MC.IcdDiagnosisCode3,
+		MC.IcdDiagnosisCode4,MC.IcdDiagnosisCode5,MC.IcdDiagnosisCode6,MC.IcdDiagnosisCode7,MC.IcdDiagnosisCode8,MC.IcdDiagnosisCode9,
+		MC.IcdDiagnosisCode10, MC.BillingProviderNpi,MC.BillingProvider_xKey,MC.BillingProviderTaxId, MC.ProcedureCode,
+		MC.IcdProcedureCode1, MC.IcdProcedureCode2, MC.IcdProcedureCode3, MC.IcdProcedureCode4, MC.IcdProcedureCode5, MC.IcdProcedureCode6,
+		MC.procCode_Procedure_xKey
+INTO MPri.xFact_Duke_project_claims
+FROM UniqueIDs u
+LEFT JOIN WHIO_SID.dbo.xFact_IntMedClaim MC
+		ON u.Whio_MemberId=MC.Whio_MemberId
+
+END
