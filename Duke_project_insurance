@@ -1,0 +1,29 @@
+USE [WHIO_Metadata]
+GO
+/****** Object:  StoredProcedure [MPri].[PROC_CREATE_TABLE_Duke_Cancer_insurance]    Script Date: 5/6/2026 10:16:17 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [MPri].[PROC_CREATE_TABLE_Duke_Cancer_insurance] 
+AS
+BEGIN
+
+	IF EXISTS (
+		 SELECT * 
+		 FROM SYS.OBJECTS 
+		 WHERE 1=1
+			 AND OBJECT_ID = OBJECT_ID(N'[MPri].[xFact_Duke_project_insurance]')
+			 AND TYPE IN (N'U'))
+	DROP TABLE [MPri].xFact_Duke_project_insurance;
+WITH UniqueIDs AS (
+    SELECT DISTINCT Whio_MemberId FROM MPri.xFact_Duke_project_cohort
+)
+SELECT IE.whio_MemberId, IE.EffectiveDateMod,IE.EndDateMod,IE.ProductType,IE.ProductSectorMod, IE.CoverageClassCode
+INTO MPri.xFact_Duke_project_insurance
+FROM UniqueIDs u
+LEFT JOIN [WHIO_SID].[dbo].[xDim_IntEligibility] IE
+		ON u.Whio_MemberId=IE.whio_MemberId
+
+END
